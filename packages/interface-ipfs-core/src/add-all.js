@@ -25,7 +25,7 @@ module.exports = (common, options) => {
   const describe = getDescribe(options)
   const it = getIt(options)
 
-  describe('.addAll', function () {
+  describe.only('.addAll', function () {
     this.timeout(120 * 1000)
 
     let ipfs
@@ -108,7 +108,7 @@ module.exports = (common, options) => {
       expect(file.cid.toString()).to.equal(expectedCid)
     })
 
-    it('should add a nested directory as array of tupples', async function () {
+    it.only('should add a nested directory as array of tupples', async function () {
       const content = (name) => ({
         path: `test-folder/${name}`,
         content: fixtures.directory.files[name]

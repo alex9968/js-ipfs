@@ -1,0 +1,61 @@
+{
+  "name": "ipfs-grpc-client",
+  "version": "0.0.0",
+  "description": "A client library for the IPFS gRPC API",
+  "keywords": [
+    "ipfs"
+  ],
+  "homepage": "https://github.com/ipfs/js-ipfs/tree/master/packages/ipfs-grpc-client#readme",
+  "bugs": "https://github.com/ipfs/js-ipfs/issues",
+  "license": "(Apache-2.0 OR MIT)",
+  "leadMaintainer": "Alex Potsides <alex@achingbrain.net>",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "main": "src/index.js",
+  "browser": {
+    "./src/grpc/transport.js": "./src/grpc/transport.browser.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ipfs/js-ipfs.git"
+  },
+  "scripts": {
+    "test": "aegir test -f ./test/interface-grpc-client.js",
+    "lint": "aegir lint",
+    "build": "npm run build:js && npm run build:types",
+    "build:js": "aegir build",
+    "build:types": "tsc --build",
+    "coverage": "npx nyc -r html npm run test:node -- --bail",
+    "clean": "rm -rf ./dist",
+    "dep-check": "aegir dep-check"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.1.8",
+    "@grpc/proto-loader": "^0.5.5",
+    "@improbable-eng/grpc-web": "^0.13.0",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.13.0",
+    "@types/google-protobuf": "^3.7.4",
+    "err-code": "^2.0.3",
+    "google-protobuf": "^3.13.0",
+    "ipfs-core-utils": "^0.5.0",
+    "ipfs-grpc-protocol": "0.0.0",
+    "ipfs-utils": "^4.0.0",
+    "it-pushable": "^1.4.0"
+  },
+  "devDependencies": {
+    "aegir": "^28.0.0",
+    "cross-env": "^7.0.0",
+    "ipfs-grpc-server": "0.0.0",
+    "interface-ipfs-core": "^0.141.0",
+    "typescript": "^4.0.3"
+  }
+}

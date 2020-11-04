@@ -1,0 +1,60 @@
+{
+  "name": "ipfs-grpc-server",
+  "version": "0.0.0",
+  "description": "A server library for the IPFS gRPC API",
+  "keywords": [
+    "ipfs"
+  ],
+  "homepage": "https://github.com/ipfs/js-ipfs/tree/master/packages/ipfs-grpc-server#readme",
+  "bugs": "https://github.com/ipfs/js-ipfs/issues",
+  "license": "(Apache-2.0 OR MIT)",
+  "leadMaintainer": "Alex Potsides <alex@achingbrain.net>",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "main": "src/index.js",
+  "browser": {},
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ipfs/js-ipfs.git"
+  },
+  "scripts": {
+    "test": "cross-env ECHO_SERVER_PORT=37490 aegir test",
+    "test:node": "cross-env ECHO_SERVER_PORT=37491 aegir test -t node",
+    "test:browser": "cross-env ECHO_SERVER_PORT=37492 aegir test -t browser",
+    "test:webworker": "cross-env ECHO_SERVER_PORT=37493 aegir test -t webworker",
+    "test:electron-main": "cross-env ECHO_SERVER_PORT=37494 aegir test -t electron-main",
+    "test:electron-renderer": "cross-env ECHO_SERVER_PORT=37495 aegir test -t electron-renderer",
+    "test:chrome": "cross-env ECHO_SERVER_PORT=37496 aegir test -t browser -t webworker -- --browsers ChromeHeadless",
+    "test:firefox": "cross-env ECHO_SERVER_PORT=37497 aegir test -t browser -t webworker -- --browsers FirefoxHeadless",
+    "lint": "aegir lint",
+    "build": "npm run build:js && npm run build:types",
+    "build:js": "aegir build",
+    "build:types": "tsc --build",
+    "coverage": "npx nyc -r html npm run test:node -- --bail",
+    "clean": "rm -rf ./dist",
+    "dep-check": "aegir dep-check"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.1.8",
+    "@grpc/proto-loader": "^0.5.5",
+    "debug": "^4.1.1",
+    "ipfs-grpc-protocol": "0.0.0",
+    "it-pushable": "^1.4.0",
+    "ws": "^7.3.1"
+  },
+  "devDependencies": {
+    "aegir": "^28.0.0",
+    "cross-env": "^7.0.0",
+    "go-ipfs": "^0.7.0",
+    "typescript": "^4.0.3"
+  }
+}
