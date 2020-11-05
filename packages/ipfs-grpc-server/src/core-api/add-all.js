@@ -22,6 +22,7 @@ module.exports = function grpcAdd (ipfs, options = {}) {
       await pipe(
         async function * toInput () {
           for await (const { index, type, path, mode, mtime, mtime_nsecs, content } of source) {
+            console.info(index, type, path, mode, mtime, mtime_nsecs)
             let mtimeObj = undefined
 
             if (mtime !== 0) {
@@ -51,6 +52,7 @@ module.exports = function grpcAdd (ipfs, options = {}) {
               // start of new file
               stream = streams[index] = pushable()
 
+              console.info('yielding file')
               yield {
                 path,
                 mode: mode !== 0 ? mode : undefined,
@@ -61,10 +63,14 @@ module.exports = function grpcAdd (ipfs, options = {}) {
 
             if (content.length) {
               // file is in progress
+              console.info('file in progress')
               stream.push(content)
             } else {
               // file is finished
+              console.info('file ended')
               stream.end()
+
+              streams[index] = null
             }
           }
         },
@@ -79,6 +85,7 @@ module.exports = function grpcAdd (ipfs, options = {}) {
               result.mtime = result.mtime.secs
             }
 
+            console.info('sending', result)
             sink.push(result)
           }
 
@@ -86,8 +93,8 @@ module.exports = function grpcAdd (ipfs, options = {}) {
         }
       )
     } finally {
-      // clean up any open streams on stream end
-      streams.forEach(stream => stream.end())
+      // clean up any open streams
+      streams.filter(Boolean).forEach(stream => stream.end())
     }
   }
 

@@ -46,6 +46,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
+    "coercer": "^1.1.2",
     "debug": "^4.1.1",
     "ipfs-grpc-protocol": "0.0.0",
     "it-pushable": "^1.4.0",

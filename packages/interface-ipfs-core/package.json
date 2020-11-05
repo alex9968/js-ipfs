@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "aegir": "^28.0.0",
-    "ipfsd-ctl": "^7.0.2"
+    "ipfsd-ctl": "ipfs/js-ipfsd-ctl#feat/expose-grpc-addr"
   },
   "contributors": [
     "Alan Shaw <alan.shaw@protocol.ai>",

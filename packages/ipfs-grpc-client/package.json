@@ -48,6 +48,7 @@
     "google-protobuf": "^3.13.0",
     "ipfs-core-utils": "^0.5.0",
     "ipfs-grpc-protocol": "0.0.0",
+    "ipfs-http-client": "^48.0.0",
     "ipfs-utils": "^4.0.0",
     "it-pushable": "^1.4.0"
   },

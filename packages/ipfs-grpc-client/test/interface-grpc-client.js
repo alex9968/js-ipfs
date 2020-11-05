@@ -9,7 +9,8 @@ describe('interface-ipfs-core tests', () => {
     spawn () {
       return {
         api: createClient({
-          url: process.env.GRPC_SERVER
+          url: process.env.GRPC_SERVER,
+          httpFallback: process.env.HTTP_SERVER
         })
       }
     },

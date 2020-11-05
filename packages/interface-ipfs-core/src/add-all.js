@@ -15,6 +15,7 @@ const { isNode } = require('ipfs-utils/src/env')
 const { getDescribe, getIt, expect } = require('./utils/mocha')
 const testTimeout = require('./utils/test-timeout')
 const uint8ArrayFromString = require('uint8arrays/from-string')
+const pushable = require('it-pushable')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -25,7 +26,7 @@ module.exports = (common, options) => {
   const describe = getDescribe(options)
   const it = getIt(options)
 
-  describe.only('.addAll', function () {
+  describe('.addAll', function () {
     this.timeout(120 * 1000)
 
     let ipfs
@@ -108,7 +109,7 @@ module.exports = (common, options) => {
       expect(file.cid.toString()).to.equal(expectedCid)
     })
 
-    it.only('should add a nested directory as array of tupples', async function () {
+    it('should add a nested directory as array of tupples', async function () {
       const content = (name) => ({
         path: `test-folder/${name}`,
         content: fixtures.directory.files[name]

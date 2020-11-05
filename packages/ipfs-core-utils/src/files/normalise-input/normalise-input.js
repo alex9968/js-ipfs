@@ -8,7 +8,9 @@ const {
   isBytes,
   isBlob,
   isReadableStream,
-  isFileObject
+  isFileObject,
+  mtimeToObject,
+  modeToNumber
 } = require('./utils')
 
 // eslint-disable-next-line complexity
@@ -103,7 +105,8 @@ async function toFileObject (input, normaliseContent) {
   // @ts-ignore - Those properties don't exist on most input types
   const { path, mode, mtime, content } = input
 
-  const file = { path: path || '', mode, mtime }
+  const file = { path: path || '', mode: modeToNumber(mode), mtime: mtimeToObject(mtime) }
+
   if (content) {
     file.content = await normaliseContent(content)
   } else if (!path) { // Not already a file object with path or content prop

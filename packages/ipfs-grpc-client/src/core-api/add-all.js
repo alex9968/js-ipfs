@@ -6,13 +6,11 @@ const normaliseInput = require('ipfs-core-utils/src/files/normalise-input')
 const CID = require('cids')
 const toIterator = require('../utils/client-to-iterable')
 const withTimeoutOption = require('ipfs-core-utils/src/with-timeout-option')
+const toHeaders = require('../utils/to-headers')
 
 module.exports = function grpcAddAll (grpc, opts = {}) {
   opts = opts || {}
 
-  /**
-   * @type {import('.').Implements<import('ipfs-core/src/components/add-all/index')>}
-   */
   async function * addAll (source, options = {}) {
     let error
 
@@ -20,7 +18,7 @@ module.exports = function grpcAddAll (grpc, opts = {}) {
       host: opts.url
     })
 
-    client.start(options)
+    client.start(toHeaders(options))
 
     setTimeout(async () => {
       try {
@@ -30,6 +28,8 @@ module.exports = function grpcAddAll (grpc, opts = {}) {
           const index = i
           i++
 
+          console.info('sending', path)
+
           if (content) {
             // file
             for await (const buf of content) {
@@ -37,12 +37,16 @@ module.exports = function grpcAddAll (grpc, opts = {}) {
               message.setIndex(index)
               message.setType(FileType.FILE)
               message.setPath(path)
-              message.setMode(mode)
 
-              if (mtime && mtime.secs != null) {
+              if (mode !== undefined) {
+                console.info('mode', mode, typeof mode)
+                message.setMode(parseInt(mode.toString()))
+              }
+
+              if (mtime && mtime.secs !== undefined) {
                 message.setMtime(mtime.secs)
 
-                if (mtime.nsecs != null) {
+                if (mtime.nsecs !== undefined) {
                   message.setMtimeNsecs(mtime.nsecs)
                 }
               }
@@ -81,6 +85,8 @@ module.exports = function grpcAddAll (grpc, opts = {}) {
             client.send(message)
           }
         }
+
+        console.info('sent all the files')
       } catch (err) {
         error = err
       } finally {

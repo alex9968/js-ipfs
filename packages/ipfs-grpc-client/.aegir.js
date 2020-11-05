@@ -4,6 +4,8 @@ const { createFactory } = require('ipfsd-ctl')
 
 const factory = createFactory({
   type: 'js',
+  test: true,
+  disposable: true,
   ipfsHttpModule: require('../ipfs-http-client'),
   ipfsBin: require.resolve('../ipfs/src/cli.js')
 })
@@ -26,7 +28,8 @@ module.exports = {
 
       return {
         env: {
-          GRPC_SERVER: 'http://127.0.0.1:6938'// `${node.host}:${node.port}` todo: pull this from config
+          GRPC_SERVER: node.grpcAddr,
+          HTTP_SERVER: node.apiAddr
         }
       }
     },
