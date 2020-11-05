@@ -10,8 +10,6 @@
     "start": "parcel index.html -p 8888",
     "test": "test-ipfs-example"
   },
-  "author": "Tara Vancil <tbvanc@gmail.com>",
-  "license": "MIT",
   "dependencies": {
     "ipfs-grpc-client": "0.0.0"
   },
