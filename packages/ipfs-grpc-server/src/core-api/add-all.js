@@ -1,7 +1,8 @@
 'use strict'
 
 const pushable = require('it-pushable')
-const pipe = require('it-pipe')
+const { pipe } = require('it-pipe')
+const debug = require('debug')('ipfs:grpc-server:add-all')
 
 module.exports = function grpcAdd (ipfs, options = {}) {
   async function add (source, sink, metadata) {
@@ -21,17 +22,18 @@ module.exports = function grpcAdd (ipfs, options = {}) {
     try {
       await pipe(
         async function * toInput () {
-          for await (const { index, type, path, mode, mtime, mtime_nsecs, content } of source) {
-            console.info(index, type, path, mode, mtime, mtime_nsecs)
-            let mtimeObj = undefined
+          for await (const { index, type, path, mode, mtime, mtime_nsecs: mtimeNsecs, content } of source) {
+            debug(index, type, path, mode, mtime, mtimeNsecs)
+            let mtimeObj
 
             if (mtime !== 0) {
               mtimeObj = {
-                secs: mtime
+                secs: mtime,
+                nsecs: undefined
               }
 
-              if (mtime_nsecs !== 0) {
-                mtimeObj.nsecs = mtime_nsecs
+              if (mtimeNsecs !== 0) {
+                mtimeObj.nsecs = mtimeNsecs
               }
             }
 
@@ -50,9 +52,10 @@ module.exports = function grpcAdd (ipfs, options = {}) {
 
             if (!stream) {
               // start of new file
+              // @ts-ignore
               stream = streams[index] = pushable()
 
-              console.info('yielding file')
+              debug('yielding file')
               yield {
                 path,
                 mode: mode !== 0 ? mode : undefined,
@@ -63,11 +66,11 @@ module.exports = function grpcAdd (ipfs, options = {}) {
 
             if (content.length) {
               // file is in progress
-              console.info('file in progress')
+              debug('file in progress')
               stream.push(content)
             } else {
               // file is finished
-              console.info('file ended')
+              debug('file ended')
               stream.end()
 
               streams[index] = null
@@ -85,7 +88,7 @@ module.exports = function grpcAdd (ipfs, options = {}) {
               result.mtime = result.mtime.secs
             }
 
-            console.info('sending', result)
+            debug('sending', result)
             sink.push(result)
           }
 

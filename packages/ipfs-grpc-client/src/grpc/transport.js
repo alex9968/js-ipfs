@@ -13,21 +13,21 @@ const WebsocketSignal = {
 
 const finishSendFrame = new Uint8Array([1])
 
-function WebsocketTransport() {
+function WebsocketTransport () {
   return (opts) => {
     return websocketRequest(opts)
   }
 }
 
-function websocketRequest(options) {
-  options.debug && debug("websocketRequest", options)
+function websocketRequest (options) {
+  options.debug && debug('websocketRequest', options)
 
-  let webSocketAddress = constructWebSocketAddress(options.url)
+  const webSocketAddress = constructWebSocketAddress(options.url)
 
   const sendQueue = []
   let ws
 
-  function sendToWebsocket(toSend) {
+  function sendToWebsocket (toSend) {
     if (toSend === WebsocketSignal.FINISH_SEND) {
       ws.send(finishSendFrame)
     } else {
@@ -55,65 +55,65 @@ function websocketRequest(options) {
       }
     },
     start: (metadata) => {
-      ws = new WebSocket(webSocketAddress, ["grpc-websockets"])
-      ws.binaryType = "arraybuffer";
+      ws = new WebSocket(webSocketAddress, ['grpc-websockets'])
+      ws.binaryType = 'arraybuffer'
       ws.onopen = function () {
-        options.debug && debug("websocketRequest.onopen")
+        options.debug && debug('websocketRequest.onopen')
         ws.send(headersToBytes(metadata))
 
         // send any messages that were passed to sendMessage before the connection was ready
         sendQueue.forEach(toSend => {
           sendToWebsocket(toSend)
-        });
-      };
+        })
+      }
 
       ws.onclose = function (closeEvent) {
-        options.debug && debug("websocketRequest.onclose", closeEvent)
+        options.debug && debug('websocketRequest.onclose', closeEvent)
         options.onEnd()
-      };
+      }
 
       ws.onerror = function (error) {
-        options.debug && debug("websocketRequest.onerror", error)
-      };
+        options.debug && debug('websocketRequest.onerror', error)
+      }
 
       ws.onmessage = function (e) {
         options.onChunk(new Uint8Array(e.data))
-      };
+      }
     },
     cancel: () => {
-      options.debug && debug("websocket.abort")
-      ws.close();
+      options.debug && debug('websocket.abort')
+      ws.close()
     }
-  };
+  }
 }
 
 function constructWebSocketAddress (url) {
-  if (url.substr(0, 8) === "https://") {
-    return `wss://${url.substr(8)}`;
-  } else if (url.substr(0, 7) === "http://") {
-    return `ws://${url.substr(7)}`;
+  if (url.substr(0, 8) === 'https://') {
+    return `wss://${url.substr(8)}`
+  } else if (url.substr(0, 7) === 'http://') {
+    return `ws://${url.substr(7)}`
   }
-  throw new Error("Websocket transport constructed with non-https:// or http:// host.");
+  throw new Error('Websocket transport constructed with non-https:// or http:// host.')
 }
 
 function headersToBytes (headers) {
-  let asString = "";
+  let asString = ''
   headers.forEach((key, values) => {
-    asString += `${key}: ${values.join(", ")}\r\n`;
-  });
-  return encodeASCII(asString);
+    asString += `${key}: ${values.join(', ')}\r\n`
+  })
+  return encodeASCII(asString)
 }
 
-function encodeASCII(input) {
-  const encoded = new Uint8Array(input.length);
+function encodeASCII (input) {
+  const encoded = new Uint8Array(input.length)
   for (let i = 0; i !== input.length; ++i) {
-    const charCode = input.charCodeAt(i);
+    const charCode = input.charCodeAt(i)
     if (!isValidHeaderAscii(charCode)) {
-      throw new Error("Metadata contains invalid ASCII");
+      throw new Error('Metadata contains invalid ASCII')
     }
-    encoded[i] = charCode;
+    encoded[i] = charCode
   }
-  return encoded;
+  return encoded
 }
 
 const isAllowedControlChars = (char) => char === 0x9 || char === 0xa || char === 0xd

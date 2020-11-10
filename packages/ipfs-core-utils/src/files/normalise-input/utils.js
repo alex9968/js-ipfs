@@ -35,8 +35,6 @@ function isFileObject (obj) {
 const isReadableStream = (value) =>
   value && typeof value.getReader === 'function'
 
-'use strict'
-
 /**
  * @param {any} mtime
  * @returns {{secs:number, nsecs:number}|undefined}

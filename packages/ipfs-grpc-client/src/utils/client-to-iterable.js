@@ -3,7 +3,12 @@
 const pushable = require('it-pushable')
 const errCode = require('err-code')
 
+/**
+ * @param {object} client - an @improbable-eng/grpc-web client
+ * @returns {AsyncIterable<object>} - an AsyncIterator
+ **/
 module.exports = function toIterator (client) {
+  // @ts-ignore
   const queue = pushable()
 
   client.onMessage(message => {

@@ -1,3 +1,4 @@
+'use strict'
 
 const { Server: WebSocketServer } = require('ws')
 const grpc = require('@grpc/grpc-js')
@@ -18,7 +19,10 @@ const packageDefinition = protoLoader.loadSync(
 )
 
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
-const ipfsProto = protoDescriptor.ipfs
+const {
+  // @ts-ignore
+  Root
+} = protoDescriptor.ipfs
 
 const WebsocketSignal = {
   START_SEND: 0,
@@ -35,14 +39,17 @@ class GRPCWebsocketMessages extends EventEmitter {
     this._ws = ws
     this._handler = handler
 
+    // @ts-ignore
     this.source = pushable()
+
+    // @ts-ignore
     this.sink = pushable()
 
     ws.on('message', (data) => {
       const flag = data[0]
 
       if (flag === WebsocketSignal.FINISH_SEND) {
-        console.info('received finish send message')
+        debug('received finish send message')
         this.source.end()
 
         return
@@ -56,15 +63,15 @@ class GRPCWebsocketMessages extends EventEmitter {
       const message = data.slice(offset, offset + length)
 
       if ((header.readUInt8(0) & TRAILER_BYTES) === TRAILER_BYTES) {
-        console.info('trailer', message)
+        debug('trailer', message)
       } else {
-        console.info('message', message)
+        debug('message', message)
         this.source.push(this._handler.deserialize(message))
       }
     })
 
     ws.once('end', () => {
-      console.info('socket ended')
+      debug('socket ended')
       this.source.end()
       this.sink.end()
     })
@@ -124,10 +131,10 @@ module.exports = async function createServer (ipfs, options = {}) {
 
   const config = await ipfs.config.getAll()
   const grpcAddr = config.Addresses.RPC
-  const [ ,, host, , port] = grpcAddr.split('/')
+  const [,, host, , port] = grpcAddr.split('/')
 
   const server = new grpc.Server()
-  server.addService(ipfsProto.Root.service, {
+  server.addService(Root.service, {
     addAll: require('./core-api/add-all')(ipfs, options)
   })
 
@@ -136,10 +143,10 @@ module.exports = async function createServer (ipfs, options = {}) {
   const wss = new WebSocketServer({ host, port })
 
   wss.on('connection', function connection (ws, request) {
-    ws.on('error', error => console.error(`WebSocket Error: ${error.message}`))
+    ws.on('error', error => debug(`WebSocket Error: ${error.message}`))
 
     ws.once('message', async function incoming (buf) {
-      console.log('req', buf.toString('utf8'))
+      debug('req', buf.toString('utf8'))
 
       const headers = buf.toString('utf8')
         .trim()
@@ -154,11 +161,12 @@ module.exports = async function createServer (ipfs, options = {}) {
       delete headers['content-type']
       delete headers['x-grpc-web']
 
+      // @ts-ignore
       const handler = server.handlers.get(request.url)
       const messages = new GRPCWebsocketMessages(ws, handler)
 
-      console.info('url', request.url)
-      console.info('headers', headers)
+      debug('url', request.url)
+      debug('headers', headers)
 
       if (!handler) {
         messages.sendTrailer(new Error(`Request path ${request.url} unimplemented`))
@@ -182,16 +190,15 @@ module.exports = async function createServer (ipfs, options = {}) {
           }
 
           messages.end()
-        break
+          break
         default:
-          console.warn(`Invalid handler type ${handler.type}`)
+          debug(`Invalid handler type ${handler.type}`)
           messages.end()
-          return
       }
     })
   })
 
-  wss.on('error', error => console.error(`WebSocket Server Error: ${error.message}`))
+  wss.on('error', error => debug(`WebSocket Server Error: ${error.message}`))
 
   return new Promise((resolve) => {
     wss.on('listening', () => {

@@ -3,8 +3,8 @@
 const camelToKebab = require('./camel-to-kebab')
 
 /**
- * @param {object} object
- * @returns {object}
+ * @param {object} object - key/value pairs to turn into HTTP headers
+ * @returns {object} - HTTP headers
  **/
 module.exports = (object) => {
   const output = {}
