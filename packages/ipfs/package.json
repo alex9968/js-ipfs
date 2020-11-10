@@ -1,6 +1,6 @@
 {
   "name": "ipfs",
-  "version": "0.51.0",
+  "version": "0.52.0",
   "description": "JavaScript implementation of the IPFS specification",
   "keywords": [
     "IPFS"
@@ -38,9 +38,9 @@
   },
   "dependencies": {
     "debug": "^4.1.1",
-    "ipfs-cli": "^0.1.0",
-    "ipfs-core": "^0.1.0",
-    "ipfs-repo": "^6.0.3",
+    "ipfs-cli": "^0.2.0",
+    "ipfs-core": "^0.2.0",
+    "ipfs-repo": "^7.0.0",
     "semver": "^7.3.2",
     "update-notifier": "^5.0.0"
   },
@@ -51,13 +51,13 @@
     "delay": "^4.4.0",
     "form-data": "^3.0.0",
     "go-ipfs": "^0.7.0",
-    "interface-ipfs-core": "^0.141.0",
-    "ipfs-http-client": "^48.0.0",
+    "interface-ipfs-core": "^0.142.0",
+    "ipfs-http-client": "^48.1.0",
     "ipfs-interop": "^3.0.0",
     "ipfs-utils": "^4.0.0",
     "ipfsd-ctl": "ipfs/js-ipfsd-ctl#feat/expose-grpc-addr",
     "iso-random-stream": "^1.1.1",
-    "iso-url": "^0.4.7",
+    "iso-url": "^1.0.0",
     "it-to-buffer": "^1.0.2",
     "merge-options": "^2.0.0",
     "nanoid": "^3.1.12",

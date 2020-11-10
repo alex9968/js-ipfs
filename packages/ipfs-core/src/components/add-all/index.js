@@ -41,15 +41,32 @@ module.exports = ({ block, gcLock, preload, pin, options: constructorOptions }) 
       opts.strategy = 'trickle'
     }
 
+    if (opts.strategy === 'trickle') {
+      opts.leafType = 'raw'
+      opts.reduceSingleLeafToSelf = false
+    }
+
+    if (opts.cidVersion > 0 && opts.rawLeaves === undefined) {
+      // if the cid version is 1 or above, use raw leaves as this is
+      // what go does.
+      opts.rawLeaves = true
+    }
+
+    if (opts.hashAlg !== undefined && opts.rawLeaves === undefined) {
+      // if a non-default hash alg has been specified, use raw leaves as this is
+      // what go does.
+      opts.rawLeaves = true
+    }
+
     delete opts.trickle
 
     if (opts.progress) {
       let total = 0
       const prog = opts.progress
 
-      opts.progress = (bytes) => {
+      opts.progress = (bytes, fileName) => {
         total += bytes
-        prog(total)
+        prog(total, fileName)
       }
     }
 
@@ -162,8 +179,8 @@ function pinFile (pin, opts) {
  * @property {boolean} [onlyHash=false] - If true, will not add blocks to the
  * blockstore.
  * @property {boolean} [pin=true] - Pin this object when adding.
- * @property {(bytes:number) => void} [progress] - A function that will be
- * called with the byte length of chunks as a file is added to ipfs.
+ * @property {(bytes:number, fileName:string) => void} [progress] - A function that will be
+ * called with the number of bytes added as a file is added to ipfs and the name of the file being added.
  * @property {boolean} [rawLeaves=false] - If true, DAG leaves will contain raw
  * file data and not be wrapped in a protobuf.
  * @property {number} [shardSplitThreshold=1000] - Directories with more than this
