@@ -1,8 +1,11 @@
 'use strict'
 
+// @ts-ignore
 const pushable = require('it-pushable')
 const EventEmitter = require('events').EventEmitter
 const debug = require('debug')('ipfs:grpc-server')
+
+// @ts-ignore
 const bl = require('bl')
 
 const WebsocketSignal = {
@@ -19,6 +22,7 @@ class GRPCWebsocketMessages extends EventEmitter {
 
     this._ws = ws
     this._handler = handler
+    // @ts-ignore
     this._buffer = bl()
 
     // @ts-ignore

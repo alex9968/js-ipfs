@@ -1,5 +1,6 @@
 'use strict'
 
+// @ts-ignore
 const pushable = require('it-pushable')
 const { pipe } = require('it-pipe')
 const debug = require('debug')('ipfs:grpc-server:add-all')
@@ -20,6 +21,7 @@ module.exports = function grpcAdd (ipfs, options = {}) {
 
     await pipe(
       async function * toInput () {
+        // @ts-ignore
         const fileInputStream = pushable()
 
         setTimeout(async () => {

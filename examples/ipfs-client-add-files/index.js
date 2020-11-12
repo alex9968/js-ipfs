@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use strict'
 
-const ipfsGrpc = require('ipfs-grpc-client')
+const ipfsClient = require('ipfs-client')
 let ipfs
 
 const COLORS = {
@@ -44,9 +44,9 @@ async function * streamFiles () {
 async function main (grpcApi, httpApi) {
   showStatus(`Connecting to ${grpcApi} using ${httpApi} as fallback`, COLORS.active)
 
-  ipfs = ipfsGrpc({
-    url: grpcApi,
-    httpFallback: httpApi
+  ipfs = ipfsClient({
+    grpc: grpcApi,
+    http: httpApi
   })
 
   const id = await ipfs.id()
@@ -54,12 +54,19 @@ async function main (grpcApi, httpApi) {
 
   for await (const file of ipfs.addAll(streamFiles(), {
     wrapWithDirectory: true,
+    // this is just to show the interleaving of uploads and progress events
+    // otherwise we'd have to upload 50 files before we see any response from
+    // the server. do not specify this so low in production as you'll have
+    // greatly degraded import performance
+    fileImportConcurrency: 1,
     progress: (bytes, file) => {
       showStatus(`File progress ${file} ${bytes}`, COLORS.active)
     }
   })) {
     showStatus(`Added file: ${file.path} ${file.cid}`, COLORS.success)
   }
+
+  showStatus('Finished!', COLORS.success)
 }
 
 // Event listeners

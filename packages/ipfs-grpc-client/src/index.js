@@ -2,8 +2,7 @@
 
 const { grpc } = require('@improbable-eng/grpc-web')
 const transport = require('./grpc/transport')
-const multiaddr = require('multiaddr')
-const multiAddrToUri = require('multiaddr-to-uri')
+const toUrlString = require('ipfs-core-utils/src/to-url-string')
 
 grpc.setDefaultTransport(transport())
 
@@ -12,25 +11,17 @@ const protocols = {
   'wss://': 'https://'
 }
 
-function normaliseUrl (url) {
-  if (multiaddr.isMultiaddr(url)) {
-    url = multiAddrToUri(url)
-  }
-
-  url = url.toString()
+module.exports = function createClient (opts = {}) {
+  opts = opts || {}
+  opts.url = toUrlString(opts.url)
 
   Object.keys(protocols).forEach(protocol => {
-    if (url.startsWith(protocol)) {
-      url = protocols[protocol] + url.substring(protocol.length)
+    if (opts.url.startsWith(protocol)) {
+      opts.url = protocols[protocol] + opts.url.substring(protocol.length)
     }
   })
 
-  return url
-}
-
-module.exports = function createClient (opts = {}) {
-  opts = opts || {}
-  opts.url = normaliseUrl(opts.url)
+  console.info('url', opts.url)
 
   const client = {
     addAll: require('./core-api/add-all')(grpc, opts),

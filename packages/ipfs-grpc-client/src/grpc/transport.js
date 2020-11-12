@@ -6,7 +6,6 @@
 
 const WebSocket = require('ws')
 const debug = require('debug')('ipfs:grpc-client:websocket-transport')
-const uint8ArrayToString = require('uint8arrays/to-string')
 
 const WebsocketSignal = {
   FINISH_SEND: 1

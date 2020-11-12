@@ -1,62 +1,51 @@
 'use strict'
 /* eslint-env browser */
 const Multiaddr = require('multiaddr')
-const toUri = require('multiaddr-to-uri')
 const { isBrowser, isWebWorker } = require('ipfs-utils/src/env')
 const { URL } = require('iso-url')
 const parseDuration = require('parse-duration').default
 const log = require('debug')('ipfs-http-client:lib:error-handler')
 const HTTP = require('ipfs-utils/src/http')
 const merge = require('merge-options')
-
-/**
- * @param {any} input
- * @returns {input is Multiaddr}
- */
-const isMultiaddr = (input) => {
-  try {
-    Multiaddr(input) // eslint-disable-line no-new
-    return true
-  } catch (e) {
-    return false
-  }
-}
+const toUrlString = require('ipfs-core-utils/src/to-url-string')
 
 /**
  * @param {any} options
  * @returns {ClientOptions}
  */
 const normalizeInput = (options = {}) => {
-  if (isMultiaddr(options)) {
-    options = { url: toUri(options) }
-  } else if (typeof options === 'string') {
-    options = { url: options }
+  let url = options
+  let opts = {}
+
+  if (options.url) {
+    url = options.url
+    opts = options
   }
 
-  if (isMultiaddr(options.url)) {
-    options.url = toUri(options.url)
-  }
+  url = new URL(toUrlString(url))
 
-  const url = new URL(options.url.toString())
-  if (options.apiPath) {
-    url.pathname = options.apiPath
+  if (opts.apiPath) {
+    url.pathname = opts.apiPath
   } else if (url.pathname === '/' || url.pathname === undefined) {
     url.pathname = 'api/v0'
   }
-  if (!options.url) {
+
+  if (!opts.url) {
     if (isBrowser || isWebWorker) {
-      url.protocol = options.protocol || location.protocol
-      url.hostname = options.host || location.hostname
-      url.port = options.port || location.port
+      url.protocol = opts.protocol || opts.protocol
+      url.hostname = opts.host || location.hostname
+      url.port = opts.port || location.port
     } else {
-      url.hostname = options.host || 'localhost'
-      url.port = options.port || '5001'
-      url.protocol = options.protocol || 'http'
+      url.hostname = opts.host || 'localhost'
+      url.port = opts.port || '5001'
+      url.protocol = opts.protocol || 'http'
     }
   }
-  options.url = url
 
-  return options
+  return {
+    ...opts,
+    url
+  }
 }
 
 const errorHandler = async (response) => {
