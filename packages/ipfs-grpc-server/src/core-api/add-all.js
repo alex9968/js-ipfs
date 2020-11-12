@@ -9,6 +9,7 @@ module.exports = function grpcAdd (ipfs, options = {}) {
     const opts = {
       ...metadata,
       progress: (bytes = 0, path = '') => {
+        debug('progress', bytes, path)
         sink.push({
           progress: true,
           bytes,
@@ -17,88 +18,102 @@ module.exports = function grpcAdd (ipfs, options = {}) {
       }
     }
 
-    const streams = []
+    await pipe(
+      async function * toInput () {
+        const fileInputStream = pushable()
 
-    try {
-      await pipe(
-        async function * toInput () {
-          for await (const { index, type, path, mode, mtime, mtime_nsecs: mtimeNsecs, content } of source) {
-            debug(index, type, path, mode, mtime, mtimeNsecs)
-            let mtimeObj
+        setTimeout(async () => {
+          const streams = []
 
-            if (mtime !== 0) {
-              mtimeObj = {
-                secs: mtime,
-                nsecs: undefined
+          try {
+            for await (const { index, type, path, mode, mtime, mtimeNsecs, content } of source) {
+              debug({ index, type, path, mode, mtime, mtimeNsecs, content: Boolean(content)})
+
+              let mtimeObj
+
+              if (mtime != null) {
+                mtimeObj = {
+                  secs: mtime,
+                  nsecs: undefined
+                }
+
+                if (mtimeNsecs != null) {
+                  mtimeObj.nsecs = mtimeNsecs
+                }
               }
 
-              if (mtimeNsecs !== 0) {
-                mtimeObj.nsecs = mtimeNsecs
+              if (type === 'DIRECTORY') {
+                debug('yielding dir', path)
+
+                // directory
+                fileInputStream.push({
+                  path,
+                  mode: mode !== 0 ? mode : undefined,
+                  mtime: mtimeObj
+                })
+
+                continue
+              }
+
+              let stream = streams[index]
+
+              if (!stream) {
+                // start of new file
+                // @ts-ignore
+                stream = streams[index] = pushable()
+
+                debug('yielding file', path)
+                fileInputStream.push({
+                  path,
+                  mode: mode !== 0 ? mode : undefined,
+                  mtime: mtimeObj,
+                  content: stream
+                })
+                debug('yielded file', path)
+              }
+
+              if (content && content.length) {
+                // file is in progress
+                debug('file in progress', path)
+                stream.push(content)
+              } else {
+                // file is finished
+                debug('file ended', path)
+                stream.end()
+
+                streams[index] = null
               }
             }
 
-            if (type === 'DIRECTORY') {
-              // directory
-              yield {
-                path,
-                mode: mode !== 0 ? mode : undefined,
-                mtime: mtimeObj
-              }
-
-              continue
-            }
-
-            let stream = streams[index]
-
-            if (!stream) {
-              // start of new file
-              // @ts-ignore
-              stream = streams[index] = pushable()
-
-              debug('yielding file')
-              yield {
-                path,
-                mode: mode !== 0 ? mode : undefined,
-                mtime: mtimeObj,
-                content: stream
-              }
-            }
-
-            if (content.length) {
-              // file is in progress
-              debug('file in progress')
-              stream.push(content)
-            } else {
-              // file is finished
-              debug('file ended')
-              stream.end()
-
-              streams[index] = null
-            }
+            fileInputStream.end()
+          } catch (err) {
+            fileInputStream.end(err)
+          } finally {
+            // clean up any open streams
+            streams.filter(Boolean).forEach(stream => stream.end())
           }
-        },
-        async function (source) {
-          for await (const result of ipfs.addAll(source, opts)) {
-            result.cid = result.cid.toString()
+        }, 0)
 
-            if (!result.mtime) {
-              delete result.mtime
-            } else {
-              result.mtime_nsecs = result.mtime.nsecs
-              result.mtime = result.mtime.secs
-            }
+        yield * fileInputStream
+      },
+      async function (source) {
+        for await (const result of ipfs.addAll(source, opts)) {
+          result.cid = result.cid.toString()
 
-            debug('sending', result)
-            sink.push(result)
+          if (!result.mtime) {
+            delete result.mtime
+          } else {
+            result.mtime_nsecs = result.mtime.nsecs
+            result.mtime = result.mtime.secs
           }
 
-          sink.end()
+          debug('returning', result)
+          sink.push(result)
         }
-      )
-    } finally {
-      // clean up any open streams
-      streams.filter(Boolean).forEach(stream => stream.end())
-    }
+
+        sink.end()
+      }
+    )
   }
 
   return add

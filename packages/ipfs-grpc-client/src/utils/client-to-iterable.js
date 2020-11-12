@@ -19,10 +19,12 @@ module.exports = function toIterator (client) {
 
     if (status) {
       const error = new Error(message)
-      err = errCode(error, trailers.get('grpc-code'), {
-        stack: trailers.get('grpc-stack') || error.stack,
+
+      err = errCode(error, trailers.get('grpc-code')[0], {
         status
       })
+
+      err.stack = trailers.get('grpc-stack')[0] || error.stack
     }
 
     queue.end(err)

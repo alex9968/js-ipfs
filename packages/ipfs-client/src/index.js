@@ -2,43 +2,27 @@
 
 const httpClient = require('ipfs-http-client')
 const grpcClient = require('ipfs-grpc-client')
-const toUri = require('multiaddr-to-uri')
-const debug = require('debug')('ipfs:client')
+const mergeOptions = require('merge-options')
 
-module.exports = async function createClient (opts = {}) {
+module.exports = function createClient (opts = {}) {
   opts = opts || {}
 
-  debug('ws', opts.grpc)
-  debug('ht', opts.http)
+  const clients = []
 
-  opts.grpc = toUri(opts.grpc.replace(/\/ws$/, ''))
-  opts.http = toUri(opts.http)
-
-  debug('ws', opts.grpc)
-  debug('ht', opts.http)
-
-  const http = httpClient({
-    ...opts,
-    url: opts.http
-  })
-
-  const grpc = grpcClient({
-    ...opts,
-    url: opts.grpc
-  })
-
-  try {
-    // call a cheap method to see if gRPC is supported
-    await grpc.id()
-
-    // override supported methods, everything else falls back to HTTP
-    return {
-      ...http,
-      ...grpc
-    }
-  } catch (err) {
-    debug(err)
+  if (opts.http) {
+    clients.push(httpClient({
+      ...opts,
+      url: opts.http
+    }))
   }
 
-  return http
+  if (opts.grpc) {
+    clients.push(grpcClient({
+      ...opts,
+      url: opts.grpc
+    }))
+  }
+
+  // override http methods with grpc if address is supplied
+  return mergeOptions.apply({ ignoreUndefined: true }, clients)
 }

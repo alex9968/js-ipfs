@@ -6,6 +6,7 @@
 
 const WebSocket = require('ws')
 const debug = require('debug')('ipfs:grpc-client:websocket-transport')
+const uint8ArrayToString = require('uint8arrays/to-string')
 
 const WebsocketSignal = {
   FINISH_SEND: 1
@@ -24,17 +25,23 @@ function websocketRequest (options) {
 
   const webSocketAddress = constructWebSocketAddress(options.url)
 
-  const sendQueue = []
+  let sendQueue = []
   let ws
 
   function sendToWebsocket (toSend) {
     if (toSend === WebsocketSignal.FINISH_SEND) {
+      debug('send finishSendFrame')
       ws.send(finishSendFrame)
     } else {
+      debug('send message', Buffer.from(toSend))
+
       const byteArray = toSend
       const c = new Int8Array(byteArray.byteLength + 1)
       c.set(new Uint8Array([0]))
       c.set(byteArray, 1)
+
+      debug('send message actually', Buffer.from(c))
+
       ws.send(c)
     }
   }
@@ -42,15 +49,19 @@ function websocketRequest (options) {
   return {
     sendMessage: (msgBytes) => {
       if (!ws || ws.readyState === ws.CONNECTING) {
+        debug('socket not yet open, queuing message',  Buffer.from(msgBytes))
         sendQueue.push(msgBytes)
       } else {
+        debug('socket open, sending message', Buffer.from(msgBytes))
         sendToWebsocket(msgBytes)
       }
     },
     finishSend: () => {
       if (!ws || ws.readyState === ws.CONNECTING) {
+        debug('socket not yet open, queuing finish send message')
         sendQueue.push(WebsocketSignal.FINISH_SEND)
       } else {
+        debug('socket open, sending finish send message', sendQueue.length)
         sendToWebsocket(WebsocketSignal.FINISH_SEND)
       }
     },
@@ -63,8 +74,10 @@ function websocketRequest (options) {
 
         // send any messages that were passed to sendMessage before the connection was ready
         sendQueue.forEach(toSend => {
+          debug('sending queued message')
           sendToWebsocket(toSend)
         })
+        sendQueue = []
       }
 
       ws.onclose = function (closeEvent) {
@@ -77,7 +90,7 @@ function websocketRequest (options) {
       }
 
       ws.onmessage = function (e) {
-        options.onChunk(new Uint8Array(e.data))
+        options.onChunk(new Uint8Array(e.data, 0, e.data.byteLength))
       }
     },
     cancel: () => {
@@ -88,7 +101,9 @@ function websocketRequest (options) {
 }
 
 function constructWebSocketAddress (url) {
-  if (url.substr(0, 8) === 'https://') {
+  if (url.startsWith('wss://') || url.startsWith('ws://')) {
+    return url
+  } else if (url.substr(0, 8) === 'https://') {
     return `wss://${url.substr(8)}`
   } else if (url.substr(0, 7) === 'http://') {
     return `ws://${url.substr(7)}`

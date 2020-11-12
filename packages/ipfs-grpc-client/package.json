@@ -50,7 +50,9 @@
     "ipfs-core-utils": "^0.5.0",
     "ipfs-grpc-protocol": "0.0.0",
     "ipfs-utils": "^4.0.0",
-    "it-pushable": "^1.4.0"
+    "it-pushable": "^1.4.0",
+    "multiaddr": "^8.0.0",
+    "multiaddr-to-uri": "^6.0.0"
   },
   "devDependencies": {
     "aegir": "^28.0.0",

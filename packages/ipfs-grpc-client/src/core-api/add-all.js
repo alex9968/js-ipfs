@@ -39,7 +39,6 @@ async function sendFile (index, client, content, path, mode, mtime) {
     message.setPath(path)
 
     if (mode !== undefined) {
-      debug('mode', mode, typeof mode)
       message.setMode(parseInt(mode.toString()))
     }
 
@@ -53,7 +52,7 @@ async function sendFile (index, client, content, path, mode, mtime) {
 
     message.setContent(new Uint8Array(buf, buf.byteOffset, buf.byteLength))
 
-    debug('send file data')
+    debug('send file data', path)
     client.send(message)
   }
 
@@ -63,7 +62,7 @@ async function sendFile (index, client, content, path, mode, mtime) {
   message.setType(FileType.FILE)
   message.setPath(path)
 
-  debug('send file end')
+  debug('send file end', path)
   client.send(message)
 }
 
@@ -99,7 +98,8 @@ module.exports = function grpcAddAll (grpc, opts = {}) {
     let error
 
     const client = grpc.client(Root.addAll, {
-      host: opts.url
+      host: opts.url,
+      debug: true
     })
 
     setTimeout(() => {

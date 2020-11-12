@@ -2,22 +2,16 @@
 'use strict'
 
 const tests = require('interface-ipfs-core')
-const createClient = require('../src')
+const factory = require('./utils/factory')
+const createClient = require('ipfs-client')
 
-describe('interface-ipfs-core tests', () => {
-  const factory = {
-    spawn () {
-      return {
-        api: createClient({
-          url: process.env.GRPC_SERVER,
-          httpFallback: process.env.HTTP_SERVER
-        })
-      }
-    },
-    clean () {}
-  }
+describe('interface-ipfs-core ipfs-client tests', () => {
+  const commonFactory = factory({
+    type: 'js',
+    ipfsClientModule: require('ipfs-client')
+  })
 
-  tests.root(factory, {
+  tests.root(commonFactory, {
     skip: [
       {
         name: 'add',
@@ -85,6 +79,28 @@ describe('interface-ipfs-core tests', () => {
       },
       {
         name: 'refsLocal',
+        reason: 'Not implemented'
+      }
+    ]
+  })
+
+  tests.miscellaneous(commonFactory, {
+    skip: [
+      {
+        name: '.dns',
+        reason: 'Not implemented'
+      },
+      {
+        name: '.resolve',
+        reason: 'Not implemented'
+      },
+      {
+        name: '.stop',
+        reason: 'Not implemented'
+      }
+      ,
+      {
+        name: '.version',
         reason: 'Not implemented'
       }
     ]

@@ -86,6 +86,9 @@ module.exports = {
         }, {
           go: {
             ipfsBin: require('go-ipfs').path()
+          },
+          js: {
+            ipfsClientModule: require('ipfs-client')
           }
         }).start()
 

@@ -10,6 +10,10 @@ module.exports = (object) => {
   const output = {}
 
   Object.keys(object).forEach(key => {
+    if (typeof object[key] === 'function') {
+      return
+    }
+
     output[camelToKebab(key)] = object[key]
   })
 

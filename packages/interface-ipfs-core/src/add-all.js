@@ -15,6 +15,7 @@ const { isNode } = require('ipfs-utils/src/env')
 const { getDescribe, getIt, expect } = require('./utils/mocha')
 const testTimeout = require('./utils/test-timeout')
 const uint8ArrayFromString = require('uint8arrays/from-string')
+const delay = require('delay')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -59,6 +60,41 @@ module.exports = (common, options) => {
     before(async () => { ipfs = (await common.spawn()).api })
 
     after(() => common.clean())
+
+    it.only('should support bidirectional streaming', async function () {
+      let progressInvoked
+
+      const handler = (bytes, path) => {
+        progressInvoked = true
+      }
+
+      function getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+      }
+
+      const source = async function * () {
+        yield {
+          content: 'hello',
+          path: '/file'
+        }
+
+        await new Promise((resolve) => {
+          const interval = setInterval(() => {
+            if (progressInvoked) {
+              clearInterval(interval)
+              resolve()
+            }
+          }, 10)
+        })
+      }
+
+      await drain(ipfs.addAll(source(), {
+        progress: handler,
+        fileImportConcurrency: 1
+      }))
+
+      expect(progressInvoked).to.be.true()
+    })
 
     it('should respect timeout option when adding files', () => {
       return testTimeout(() => drain(ipfs.addAll(uint8ArrayFromString('Hello'), {

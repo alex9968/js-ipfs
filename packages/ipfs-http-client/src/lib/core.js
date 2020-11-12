@@ -33,7 +33,11 @@ const normalizeInput = (options = {}) => {
     options = { url: options }
   }
 
-  const url = new URL(options.url)
+  if (isMultiaddr(options.url)) {
+    options.url = toUri(options.url)
+  }
+
+  const url = new URL(options.url.toString())
   if (options.apiPath) {
     url.pathname = options.apiPath
   } else if (url.pathname === '/' || url.pathname === undefined) {
