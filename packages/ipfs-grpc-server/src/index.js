@@ -96,8 +96,6 @@ module.exports = async function createServer (ipfs, options = {}) {
           const request = await first(messages.source)
 
           handler.func(request, fromHeaders(headers), (err, res) => {
-            console.info('unary derped', err, res)
-
             if (err) {
               messages.sendTrailer(errCode(new Error(err.details), err.code, err))
             } else {

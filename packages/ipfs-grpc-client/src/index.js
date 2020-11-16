@@ -21,8 +21,6 @@ module.exports = function createClient (opts = {}) {
     }
   })
 
-  console.info('url', opts.url)
-
   const client = {
     addAll: require('./core-api/add-all')(grpc, opts),
     id: require('./core-api/id')(grpc, opts)

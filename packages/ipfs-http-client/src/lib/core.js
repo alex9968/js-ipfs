@@ -2,7 +2,6 @@
 /* eslint-env browser */
 const Multiaddr = require('multiaddr')
 const { isBrowser, isWebWorker } = require('ipfs-utils/src/env')
-const { URL } = require('iso-url')
 const parseDuration = require('parse-duration').default
 const log = require('debug')('ipfs-http-client:lib:error-handler')
 const HTTP = require('ipfs-utils/src/http')
@@ -10,19 +9,36 @@ const merge = require('merge-options')
 const toUrlString = require('ipfs-core-utils/src/to-url-string')
 
 /**
- * @param {any} options
+ * @param {ClientOptions|URL|Multiaddr|string} options
  * @returns {ClientOptions}
  */
 const normalizeInput = (options = {}) => {
-  let url = options
-  let opts = {}
+  let url
+  let opts
 
-  if (options.url) {
+  if (typeof options === 'string' || Multiaddr.isMultiaddr(options)) {
+    url = new URL(toUrlString(options))
+    opts = {}
+  } else if (options instanceof URL) {
+    url = options
+    opts = {}
+  } else if (typeof options.url === 'string' || Multiaddr.isMultiaddr(options.url)) {
+    url = new URL(toUrlString(options.url))
+    opts = options
+  } else if (options.url instanceof URL) {
     url = options.url
     opts = options
-  }
+  } else {
+    opts = options || {}
 
-  url = new URL(toUrlString(url))
+    if (isBrowser || isWebWorker) {
+      const protocol = (opts.protocol || location.protocol).replace(':', '')
+
+      url = new URL(`${protocol}://${opts.host || location.hostname}:${opts.port || location.port}`)
+    } else {
+      url = new URL(`${opts.protocol || 'http'}://${opts.host || 'localhost'}:${opts.port || '5001'}`)
+    }
+  }
 
   if (opts.apiPath) {
     url.pathname = opts.apiPath
@@ -30,20 +46,12 @@ const normalizeInput = (options = {}) => {
     url.pathname = 'api/v0'
   }
 
-  if (!opts.url) {
-    if (isBrowser || isWebWorker) {
-      url.protocol = opts.protocol || opts.protocol
-      url.hostname = opts.host || location.hostname
-      url.port = opts.port || location.port
-    } else {
-      url.hostname = opts.host || 'localhost'
-      url.port = opts.port || '5001'
-      url.protocol = opts.protocol || 'http'
-    }
-  }
-
   return {
     ...opts,
+    host: url.host,
+    protocol: url.protocol.replace(':', ''),
+    port: url.port,
+    apiPath: url.pathname,
     url
   }
 }

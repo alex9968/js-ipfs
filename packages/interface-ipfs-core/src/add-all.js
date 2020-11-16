@@ -61,41 +61,6 @@ module.exports = (common, options) => {
 
     after(() => common.clean())
 
-    it.only('should support bidirectional streaming', async function () {
-      let progressInvoked
-
-      const handler = (bytes, path) => {
-        progressInvoked = true
-      }
-
-      function getRandomInt(max) {
-        return Math.floor(Math.random() * Math.floor(max));
-      }
-
-      const source = async function * () {
-        yield {
-          content: 'hello',
-          path: '/file'
-        }
-
-        await new Promise((resolve) => {
-          const interval = setInterval(() => {
-            if (progressInvoked) {
-              clearInterval(interval)
-              resolve()
-            }
-          }, 10)
-        })
-      }
-
-      await drain(ipfs.addAll(source(), {
-        progress: handler,
-        fileImportConcurrency: 1
-      }))
-
-      expect(progressInvoked).to.be.true()
-    })
-
     it('should respect timeout option when adding files', () => {
       return testTimeout(() => drain(ipfs.addAll(uint8ArrayFromString('Hello'), {
         timeout: 1
@@ -455,6 +420,41 @@ module.exports = (common, options) => {
       expect(files[0].cid.toString()).to.equal('bafybeifmayxiu375ftlgydntjtffy5cssptjvxqw6vyuvtymntm37mpvua')
       expect(files[0].cid.codec).to.equal('dag-pb')
       expect(files[0].size).to.equal(18)
+    })
+
+    it('should support bidirectional streaming', async function () {
+      let progressInvoked
+
+      const handler = (bytes, path) => {
+        progressInvoked = true
+      }
+
+      function getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+      }
+
+      const source = async function * () {
+        yield {
+          content: 'hello',
+          path: '/file'
+        }
+
+        await new Promise((resolve) => {
+          const interval = setInterval(() => {
+            if (progressInvoked) {
+              clearInterval(interval)
+              resolve()
+            }
+          }, 10)
+        })
+      }
+
+      await drain(ipfs.addAll(source(), {
+        progress: handler,
+        fileImportConcurrency: 1
+      }))
+
+      expect(progressInvoked).to.be.true()
     })
   })
 }
